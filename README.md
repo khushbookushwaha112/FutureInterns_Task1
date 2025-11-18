@@ -22,7 +22,6 @@ The dashboard allows users to upload their own dataset or view a demo forecast.
 Task 1 - Sales Forecasting Dashboard (Future Interns ML Internship)
 
 ## 🌐 Live Dashboard Link
-(Add your Streamlit Cloud link after deployment)
+(https://futureinternstask1-kcx94rbsak3fv2zhvhsfoz.streamlit.app/)
 
-## 📝 LinkedIn Post
-(Add your LinkedIn post link here after uploading)
+
