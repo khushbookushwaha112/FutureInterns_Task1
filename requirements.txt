@@ -1,0 +1,6 @@
+prophet==1.1.5
+pandas
+plotly
+scikit-learn
+streamlit
+matplotlib
