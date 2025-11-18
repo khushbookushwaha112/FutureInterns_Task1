@@ -20,3 +20,9 @@ The dashboard allows users to upload their own dataset or view a demo forecast.
 ## 📁 Project Structure
 # FutureInterns_Task1
 Task 1 - Sales Forecasting Dashboard (Future Interns ML Internship)
+
+## 🌐 Live Dashboard Link
+(Add your Streamlit Cloud link after deployment)
+
+## 📝 LinkedIn Post
+(Add your LinkedIn post link here after uploading)
