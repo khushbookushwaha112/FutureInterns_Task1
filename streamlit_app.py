@@ -1,93 +1,67 @@
 import streamlit as st
 import pandas as pd
-from prophet import Prophet
-import plotly.express as px
-import os
 
-st.set_page_config(page_title="Sales Forecast Dashboard", layout="wide")
-st.title("📊 AI-Based Sales Forecasting — Task 1")
+st.set_page_config(page_title="AI Sales Forecasting — Task 1", layout="wide")
+st.title("📈 AI-Based Sales Forecasting — Task 1")
 
-st.markdown("Upload CSV with sales data. System automatically detects date & sales columns.")
+uploaded = st.file_uploader("Upload CSV file", type=["csv"])
 
-uploaded = st.file_uploader("Upload CSV", type=['csv'])
-
-DEMO_CSV = "mock_kaggle.csv"
-DEMO_FORECAST = "forecast_output.csv"
-
-
-# ⭐ SAFE CLEAN FUNCTION (no error)
 def clean_df(df):
+
     df = df.copy()
+    
+    # 1️⃣ Automatically detect date column
+    date_cols = ["date", "data", "Date", "Data", "ds"]
 
-    # Auto-detect date column
-    possible_date_cols = ["data", "date", "Date", "DATE"]
-    date_col = None
-    for col in possible_date_cols:
-        if col in df.columns:
-            date_col = col
+    found_date = None
+    for c in df.columns:
+        if c in date_cols:
+            found_date = c
             break
 
-    if date_col is None:
-        st.error("❌ Date column not found! Your CSV must contain a date column such as 'date' or 'data'.")
-        st.stop()
+    if not found_date:
+        st.error("❌ Date column not found! CSV must contain a date column (date/data/ds).")
+        return None
 
-    # Auto-detect sales column
-    possible_sales = ["venda", "sales", "Sales", "Sale", "amount"]
-    sales_col = None
-    for col in possible_sales:
-        if col in df.columns:
-            sales_col = col
+    # Rename to standard name
+    df.rename(columns={found_date: "date"}, inplace=True)
+
+    # Convert to datetime
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+
+    # 2️⃣ Detect sales/target column (y, sales, value, etc.)
+    target_cols = ["y", "sales", "Sale", "value"]
+
+    found_target = None
+    for c in df.columns:
+        if c in target_cols:
+            found_target = c
             break
 
-    if sales_col is None:
-        st.error("❌ Sales column not found! Your CSV must contain a numeric sales column like 'venda' or 'sales'.")
-        st.stop()
+    # If Prophet output is uploaded (yhat exists)
+    if "yhat" in df.columns:
+        df["prediction"] = df["yhat"]
+        return df
 
-    df[date_col] = pd.to_datetime(df[date_col], errors='coerce')
-    df[sales_col] = pd.to_numeric(df[sales_col], errors='coerce')
-    df = df.dropna(subset=[date_col, sales_col])
+    if not found_target:
+        st.error("❌ Sales column not found! CSV must contain target column such as y/sales.")
+        return None
 
-    df = df.rename(columns={date_col: "ds", sales_col: "y"})
-    df = df[["ds", "y"]].sort_values("ds")
+    df.rename(columns={found_target: "y"}, inplace=True)
 
     return df
 
 
-# ⭐ FORECAST FUNCTION (NO ERROR)
-def make_forecast(ts):
-    m = Prophet()
-    m.fit(ts)
-    future = m.make_future_dataframe(periods=30)
-    forecast = m.predict(future)
-    return forecast
-
-
-# ⭐ MAIN APP
 if uploaded:
+
     df = pd.read_csv(uploaded)
 
-    st.subheader("Uploaded Data")
-    st.dataframe(df.head())
+    cleaned = clean_df(df)
 
-    df_clean = clean_df(df)
-    forecast = make_forecast(df_clean)
-
-    st.subheader("Sales Forecast (Next 30 Days)")
-
-    fig = px.line(forecast, x='ds', y='yhat', title="Predicted Sales")
-    st.plotly_chart(fig)
+    if cleaned is not None:
+        st.success("✅ File processed successfully!")
+        st.subheader("Cleaned Data Preview")
+        st.dataframe(cleaned.head())
 
 else:
-    st.info("No CSV uploaded. Showing demo dataset prediction.")
-
-    if os.path.exists(DEMO_CSV) and os.path.exists(DEMO_FORECAST):
-        df_demo = pd.read_csv(DEMO_CSV)
-        forecast = pd.read_csv(DEMO_FORECAST)
-
-        st.subheader("Demo Data")
-        st.dataframe(df_demo.head())
-
-        fig = px.line(forecast, x='ds', y='yhat', title="Predicted Sales (Demo)")
-        st.plotly_chart(fig)
-    else:
-        st.warning("Demo files not found. Upload your CSV.")
+    st.info("Upload your CSV to begin forecasting.")
